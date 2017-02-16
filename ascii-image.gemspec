@@ -9,5 +9,6 @@ Gem::Specification.new do |s|
     s.homepage    = "https://github.com/nathanpc/ascii-image"
 
     s.add_dependency "rainbow", ">= 1.1.4"
-    s.add_dependency "rmagick", ">= 2.13.1"
+    s.add_dependency "mini_magick", ">= 4.6.1"
+    s.add_dependency "chunky_png", ">= 1.3.8"
 end
