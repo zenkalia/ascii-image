@@ -4,4 +4,4 @@ require 'rubygems'
 require '../lib/ascii-image.rb'
 
 ascii = ASCII_Image.new("poster.jpg")
-ascii.build(80)
+ascii.build(70)
