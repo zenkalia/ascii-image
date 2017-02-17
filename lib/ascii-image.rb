@@ -5,6 +5,7 @@ require 'mini_magick'
 require 'chunky_png'
 require 'rainbow'
 require 'open-uri'
+require 'pry'
 
 # == Summary
 #
@@ -20,6 +21,31 @@ require 'open-uri'
 #
 # Author:: Nathan Campos (nathanpc@dreamintech.net)
 # Website:: http://about.me/nathanpc
+
+class Array
+  def in_groups_of(number, fill_with = nil)
+    if number.to_i <= 0
+      raise ArgumentError,
+        "Group size must be a positive integer, was #{number.inspect}"
+    end
+
+    if fill_with == false
+      collection = self
+    else
+      # size % number gives how many extra we have;
+      # subtracting from number gives how many to add;
+      # modulo number ensures we don't add group of just fill.
+      padding = (number - size % number) % number
+      collection = dup.concat(Array.new(padding, fill_with))
+    end
+
+    if block_given?
+      collection.each_slice(number) { |slice| yield(slice) }
+    else
+      collection.each_slice(number).to_a
+    end
+  end
+end
 
 class ASCII_Image
     # Initialize the ASCII_Image class.
@@ -57,18 +83,21 @@ class ASCII_Image
 
         file = Tempfile.new 'foo.png'
 
-        height = width * (image.height.to_f / image.width) / 2.4
+        height = width * (image.height.to_f / image.width) / 2.4 * 2
         image = image.resize("#{width}x#{height}!")
         image.format 'png'
         image.write file.path
 
         chunky = ChunkyPNG::Image.from_file file.path
 
-        (0..chunky.height-1).each do |row|
-          row_pixels = chunky.row row
-          row_pixels.each do |pixel|
-            r,g,b = ChunkyPNG::Color.to_truecolor_bytes pixel
-            print Rainbow(" ").background(r, g, b)
+        rows = chunky.pixels.each_slice(width)
+
+        rows.to_a.in_groups_of(2) do |top_row_pixels, bot_row_pixels|
+          top_row_pixels.each_with_index do |top_pixel, index|
+            bot_pixel = bot_row_pixels[index]
+            top_color = ChunkyPNG::Color.to_truecolor_bytes top_pixel
+            bot_color = ChunkyPNG::Color.to_truecolor_bytes bot_pixel
+            print Rainbow("\u2584").fg(bot_color).bg(top_color)
           end
           print "\n"
         end
